@@ -104,6 +104,15 @@ function parseWithRegExp(text, regex, processValue) { // regex needs 'g' flag
 }
 function parseFlashVariables(s) {return parseWithRegExp(s, /([^&=]*)=([^&]*)/g);}
 
+chrome.contextMenus.create({
+    "type":"normal", 
+    "title":"AirPlay it!", 
+    "contexts":["link"], 
+    "onclick": function (info, tab) { 
+		startPlaying(info.linkUrl)
+    } 
+});
+
 
 function airplay(url, position) { 
     var xhr = new XMLHttpRequest(); 
@@ -130,8 +139,14 @@ function airplay(url, position) {
             xhr.setRequestHeader("Content-Type", "text/parameters"); xhr.send("Content-Location: " + url +
             "\nStart-Position: " + position + "\n");
     }
-	function startPlaying(video_id)
+	function startPlaying(youtube_link)
 	{
+	  var video_id = youtube_link.split('v=')[1];
+	  var ampersandPosition = video_id.indexOf('&');
+	  if(ampersandPosition != -1) {
+	    video_id = video_id.substring(0, ampersandPosition);
+	   }
+		
 	  	var video_info = getYouTubeVideoInfo(video_id);
 	  	var video_url = getYouTubeVideoUrl(video_info, "best");
 	

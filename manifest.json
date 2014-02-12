@@ -8,6 +8,7 @@
   "permissions": [
 	"activeTab",
 	"background",
+	"contextMenus",
     "https://www.youtube.com/",
     "http://www.youtube.com/",
 	"http://apple-tv.local:7000/"
