@@ -28,5 +28,5 @@
         "http://www.youtube.com/",
         "http://*.local:7000/"
     ],
-    "version": "1.0.1"
+    "version": "1.0.2"
 }

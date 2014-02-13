@@ -74,14 +74,22 @@ function getYouTubeVideoUrl(video_info, quality)
 			else if(fmt.s) 
 				url_info.url += "&signature=" + decodeSignature(fmt.s);
 
-			if(url_info.url && url_info.itag && url_info.type.lastIndexOf("video/mp4;",0) === 0)
+			if(url_info.url 
+				&& url_info.itag 
+				&& url_info.type.lastIndexOf("video/mp4;",0) === 0 // we want only MP4 streams
+				&& parseInt(url_info.itag) < 82 // we don't want 3D
+			){
 				url_data.push(url_info);
+			}
 		}
 		url_data.sort(url_data_sort_func);
 
 		if(quality != undefined && quality != null)
 		{
-			if(quality == "best") return url_data[0];
+			if(quality == "best") {
+				console.log("Sending video format " + url_data[0].type + " itag=" + url_data[0].itag + " to AppleTV at " + getHostname())
+				return url_data[0];
+			}
 			else if(quality == "worst") return url_data[url_data.length - 1];
 			else return url_data_closest_quality(quality);
 		}
