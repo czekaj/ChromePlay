@@ -131,39 +131,49 @@ function airplay(url, position) {
 	var hostname = getHostname()
     var port = ":7000"; 
     if(/: \d + $ / .test(hostname)) port = "";
+
+	// stop currently playing video
+	var xhr_stop = new XMLHttpRequest();
+	xhr_stop.open("POST", "http://" + hostname + port + "/stop", true, "AirPlay", null);
+	xhr_stop.send(null);
+
+	var playback_started = false // to avoid terminating playback before video loads
+
     xhr.open("POST", "http://" + hostname + port + "/play", true, "AirPlay", null);
-    xhr.addEventListener("load", function() { // Set timer to prevent playback from aborting
-    var timer = setInterval(function() {
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", "http://" + hostname +
-                port + "/playback-info", true, "AirPlay", null);
-            xhr.addEventListener("load", function() {
-                    if (xhr.responseXML.getElementsByTagName("key").length <= 2) // || xhr.responseXML.getElementsByTagName("key")[0].innerHTML == "readyToPlay") 
-					{ // playback terminated 
-                        clearInterval(timer);
-						var xhr_stop = new XMLHttpRequest();
-						 xhr_stop.open("POST", "http://" + hostname + port + "/stop", true, "AirPlay", null);
-						 xhr_stop.send(null);
-					} }, false); 
-                        xhr.addEventListener("error", function() {clearInterval(timer);}, false);
-                        xhr.send(null);
-                    }, 5000);
-            }, false); 
-            xhr.setRequestHeader("Content-Type", "text/parameters"); xhr.send("Content-Location: " + url +
-            "\nStart-Position: " + position + "\n");
-    }
-	function startPlaying(youtube_link)
-	{
-	  var video_id = youtube_link.split('v=')[1];
-	  var ampersandPosition = video_id.indexOf('&');
-	  if(ampersandPosition != -1) {
-	    video_id = video_id.substring(0, ampersandPosition);
-	   }
-		
-	  	var video_info = getYouTubeVideoInfo(video_id);
-	  	var video_url = getYouTubeVideoUrl(video_info, "best");
-	
-	  	airplay(video_url.url,0);		
+    xhr.addEventListener("load", function() { // set timer to prevent playback from aborting
+		var timer = setInterval(function() {
+			var xhr = new XMLHttpRequest();
+			var playback_info_keys_count = 0; // 0 something wrong; 2 ready to play; >2 playing
+			xhr.open("GET", "http://" + hostname + port + "/playback-info", true, "AirPlay", null);
+			xhr.addEventListener("load", function() {
+				playback_info_keys_count = xhr.responseXML.getElementsByTagName("key").length;
+				if (playback_started &&  playback_info_keys_count <= 2) { // playback terminated 
+					clearInterval(timer);
+					var xhr_stop = new XMLHttpRequest();
+					xhr_stop.open("POST", "http://" + hostname + port + "/stop", true, "AirPlay", null);
+					xhr_stop.send(null);
+				}
+				else if (!playback_started && playback_info_keys_count > 2) { // if we're getting some actual playback info
+					playback_started = true;
+				}
+			}, false);
+			xhr.addEventListener("error", function() {clearInterval(timer);}, false);
+			xhr.send(null);
+		}, 5000);
+	}, false); 
+    xhr.setRequestHeader("Content-Type", "text/parameters"); xhr.send("Content-Location: " + url +
+    "\nStart-Position: " + position + "\n");
+}
+
+function startPlaying(youtube_link) {
+	var video_id = youtube_link.split('v=')[1];
+	var ampersandPosition = video_id.indexOf('&');
+	if(ampersandPosition != -1) {
+		video_id = video_id.substring(0, ampersandPosition);
 	}
+	var video_info = getYouTubeVideoInfo(video_id);
+	var video_url = getYouTubeVideoUrl(video_info, "best");
+	airplay(video_url.url,0);		
+}
 
 	
