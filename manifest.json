@@ -1,31 +1,32 @@
 {
-  "manifest_version": 2,
-
-  "name": "ChromePlay",
-  "description": "This extension allows sending YouTube videos to AppleTV via AirPlay",
-  "version": "1.0",
-
-  "permissions": [
-	"activeTab",
-	"background",
-	"contextMenus",
-    "https://www.youtube.com/",
-    "http://www.youtube.com/",
-	"http://apple-tv.local:7000/"
-  ],
-  "browser_action": {
-    "default_icon": "icon.png",
-    "default_popup": "popup.html",
-    "browser_action": {
-        "default_title": "Click Me"
-    }	
-  },
-  "background": {
-      "scripts": ["background.js"]
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
     },
-	"icons": {
-	    "16": "icon.png",
-	    "48": "icon.png",
-	    "128": "icon.png"
-	  }	
+    "browser_action": {
+        "browser_action": {
+            "default_title": "Click Me"
+        },
+        "default_icon": "icon.png",
+        "default_popup": "popup.html"
+    },
+    "description": "This extension allows sending YouTube videos to AppleTV via AirPlay",
+    "icons": {
+        "128": "icon.png",
+        "16": "icon.png",
+        "48": "icon.png"
+    },
+    "manifest_version": 2,
+    "name": "ChromePlay",
+    "options_page": "options.html",
+    "permissions": [
+        "activeTab",
+        "background",
+        "contextMenus",
+        "https://www.youtube.com/",
+        "http://www.youtube.com/",
+        "http://*.local:7000/"
+    ],
+    "version": "1.0"
 }

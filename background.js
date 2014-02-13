@@ -1,3 +1,15 @@
+function getHostname()
+{
+    var hostname = localStorage["hostname"];
+    if (!hostname) {
+      return "apple-tv.local";
+    }
+	else
+	{
+		return hostname
+	}
+}
+
 // reads and parses a query string
 function readQueryString(qs)
 {
@@ -116,20 +128,21 @@ chrome.contextMenus.create({
 
 function airplay(url, position) { 
     var xhr = new XMLHttpRequest(); 
+	var hostname = getHostname()
     var port = ":7000"; 
-    if(/: \d + $ / .test("apple-tv.local")) port = "";
-    xhr.open("POST", "http://" + "apple-tv.local" + port + "/play", true, "AirPlay", null);
+    if(/: \d + $ / .test(hostname)) port = "";
+    xhr.open("POST", "http://" + hostname + port + "/play", true, "AirPlay", null);
     xhr.addEventListener("load", function() { // Set timer to prevent playback from aborting
     var timer = setInterval(function() {
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "http://" + "apple-tv.local" +
+            xhr.open("GET", "http://" + hostname +
                 port + "/playback-info", true, "AirPlay", null);
             xhr.addEventListener("load", function() {
                     if (xhr.responseXML.getElementsByTagName("key").length <= 2) // || xhr.responseXML.getElementsByTagName("key")[0].innerHTML == "readyToPlay") 
 					{ // playback terminated 
                         clearInterval(timer);
 						var xhr_stop = new XMLHttpRequest();
-						 xhr_stop.open("POST", "http://" + "apple-tv.local" + port + "/stop", true, "AirPlay", null);
+						 xhr_stop.open("POST", "http://" + hostname + port + "/stop", true, "AirPlay", null);
 						 xhr_stop.send(null);
 					} }, false); 
                         xhr.addEventListener("error", function() {clearInterval(timer);}, false);
