@@ -180,12 +180,17 @@ function airplay(url, position) {
     "\nStart-Position: " + position + "\n");
 }
 
-function getYouTubeAirPlayUrl(youtube_url) {
-	var video_id = youtube_url.split('v=')[1];
+function parseYouTubeUrl(url) {
+	var video_id = url.split('v=')[1];
 	var ampersandPosition = video_id.indexOf('&');
 	if(ampersandPosition != -1) {
 		video_id = video_id.substring(0, ampersandPosition);
 	}
+	return video_id
+}
+
+function getYouTubeAirPlayUrl(youtube_url) {
+	var video_id = parseYouTubeUrl(youtube_url)
 	var video_info = getYouTubeVideoInfo(video_id);
 	var video_url = getYouTubeVideoUrlObject(video_info, "best");
 	
@@ -200,5 +205,24 @@ function startPlaying(video_url, content_type) {
 	}
 	airplay(airplay_url,0);		
 }
+
+function onRequest(request, sender, sendResponse) {
+  // Show the page action for the tab that the sender (content script)
+  // was on.
+  chrome.pageAction.show(sender.tab.id);
+
+  // Return nothing to let the connection be cleaned up.
+  sendResponse({});
+};
+
+// Listen for the content script to send a message to the background page.
+chrome.extension.onRequest.addListener(onRequest);
+
+chrome.pageAction.onClicked.addListener(function(tab)
+ {
+	 startPlaying(tab.URL)
+ }
+);
+
 
 	
