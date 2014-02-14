@@ -45,7 +45,7 @@ function getYouTubeVideoInfo(video_id)
 	return null;
 }
 
-function getYouTubeVideoUrl(video_info, quality)
+function getYouTubeVideoUrlObject(video_info, quality)
 {
 	if(video_info.conn && video_info.conn.startsWith('rtmp')) return video_info.conn;
 	else if(video_info.url_encoded_fmt_stream_map && video_info.url_encoded_fmt_stream_map.length > 1)
@@ -127,9 +127,16 @@ function parseFlashVariables(s) {return parseWithRegExp(s, /([^&=]*)=([^&]*)/g);
 chrome.contextMenus.create({
     "type":"normal", 
     "title":"AirPlay it!", 
-    "contexts":["link"], 
-    "onclick": function (info, tab) { 
-		startPlaying(info.linkUrl)
+    "contexts":["link", "video"], 
+    "onclick": function (info, tab) {
+		if (typeof info.linkUrl !== 'undefined') { // link clicked
+			console.log("Right click - Sending url: " + info.linkUrl + " mediaType: " + info.mediaType) 
+			startPlaying(info.linkUrl, info.mediaType)
+		}
+		else if (info.mediaType === 'video') { // HTML5 video clicked
+			console.log("Right click - Sending video: " + info.srcUrl) 
+			startPlaying(info.srcUrl, info.mediaType)
+		}
     } 
 });
 
@@ -173,15 +180,25 @@ function airplay(url, position) {
     "\nStart-Position: " + position + "\n");
 }
 
-function startPlaying(youtube_link) {
-	var video_id = youtube_link.split('v=')[1];
+function getYouTubeAirPlayUrl(youtube_url) {
+	var video_id = youtube_url.split('v=')[1];
 	var ampersandPosition = video_id.indexOf('&');
 	if(ampersandPosition != -1) {
 		video_id = video_id.substring(0, ampersandPosition);
 	}
 	var video_info = getYouTubeVideoInfo(video_id);
-	var video_url = getYouTubeVideoUrl(video_info, "best");
-	airplay(video_url.url,0);		
+	var video_url = getYouTubeVideoUrlObject(video_info, "best");
+	
+	return video_url.url
+}
+
+function startPlaying(video_url, content_type) {
+	content_type = typeof content_type === 'undefined' || content_type !== 'video' ? 'youtube' : 'video';
+	var airplay_url = video_url;
+	if (content_type === 'youtube') {
+		airplay_url = getYouTubeAirPlayUrl(video_url);
+	}
+	airplay(airplay_url,0);		
 }
 
 	
