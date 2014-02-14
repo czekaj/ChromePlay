@@ -1,14 +1,35 @@
 ChromePlay
 ==========
-Google Chrome browser extension - allows sending YouTube and (almost) any HTML5 video to AppleTV via AirPlay
+Google Chrome extension - send YouTube, Vimeo and (almost) any HTML5 video to AppleTV via AirPlay
 
 ![ChromePlay logo](https://github.com/czekaj/ChromePlay/raw/master/icon.png "ChromePlay")
 
+Features in v1.2.0
+------------------
+- YouTube AirPlay (click/right-click)
+- Vimeo AirPlay (right-click)
+- HTML5 video AirPlay (right-click)
+
 Usage
 -----
-- Click the extension icon while watching a video on youtube.com to send it to your AppleTV
-- Right click a youtube.com link or a HTML5 video and select "AirPlay it!" to send it to your AppleTV
+**YouTube**  
+  
+- Click the extension icon while watching a video on youtube.com to send it to your AppleTV  
+  
+![ChromePlay YouTube click](https://github.com/czekaj/ChromePlay/raw/master/images/chromeplay-click.png "ChromePlay YouTube click")  
+  
+  
+- Right click a youtube.com link and select "AirPlay it!" to send it to your AppleTV  
+  
+![ChromePlay YouTube right-click](https://github.com/czekaj/ChromePlay/raw/master/images/chromeplay-right_click.png "ChromePlay YouTube right-click")  
 
+**Vimeo & HTML5 videos**  
+  
+- Press Start & Pause in HTML5 player, right-click on the player and select "AirPlay it!" to send it to your AppleTV  
+  
+![ChromePlay HTML5 right-click](https://github.com/czekaj/ChromePlay/raw/master/images/chromeplay-right_click_html5.png "ChromePlay HTML5 right-click")  
+  
+  
 FAQ
 ---
 
@@ -25,6 +46,8 @@ FAQ
 Installation
 ------------
 Clone the repository (preferred) or extract the zip file from [here](https://github.com/czekaj/ChromePlay/archive/master.zip "https://github.com/czekaj/ChromePlay/archive/master.zip"). Install it by clicking "Load unpacked extension..." on Chrome Extensions page and point it to the extracted folder.
+
+![ChromePlay installation](https://github.com/czekaj/ChromePlay/raw/master/images/chromeplay-install.png "ChromePlay installation")
 
 Updates
 -------
