@@ -31,7 +31,6 @@
             "19": "icon.png",
             "38": "icon.png"
         },
-        "default_popup": "popup.html",
         "default_title": "AirPlay it!"
     },
     "permissions": [
@@ -39,8 +38,10 @@
         "background",
         "contextMenus",
         "https://www.youtube.com/",
-        "http://www.youtube.com/",
-        "http://*.local:7000/"
+        "http://*/*",
+        "http://*.local:7000/",
+		"webRequest", 
+		"webRequestBlocking"		
     ],
-    "version": "1.2.0"
+    "version": "1.3.0"
 }

@@ -220,9 +220,46 @@ chrome.extension.onRequest.addListener(onRequest);
 
 chrome.pageAction.onClicked.addListener(function(tab)
  {
-	 startPlaying(tab.URL)
+	 console.log('Button clicked.');
+	 var video_url;
+	 chrome.tabs.sendMessage(tab.id, {action: "Html5VideoUrl"}, function(response) {
+		 console.log('Response on HTML5 compatibility received');
+		 video_url = response.Html5VideoUrl;
+	     if (typeof video_url !== 'undefined') {
+			 console.log('startPlaying HTML5');
+			 startPlaying(video_url, 'video'); // HTML5 video
+	     } else {
+			 console.log('startPlaying YouTube');
+			 startPlaying(tab.url) // YouTube url
+	     }
+	 });	 
  }
 );
 
+// some websites use HTML5 video if viewed on iPad
+chrome.webRequest.onBeforeSendHeaders.addListener(
+    function(info) {
+        // Replace the User-Agent header
+        var headers = info.requestHeaders;
+        headers.forEach(function(header, i) {
+            if (header.name.toLowerCase() == 'user-agent') { 
+                header.value = 'Mozilla/5.0 (iPad; CPU OS 7_0_4 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) Version/7.0 Mobile/11B554a Safari/9537.53'; // iPadify page to get HTML5 video
+            }
+        });  
+        return {requestHeaders: headers};
+    },
+    // Request filter
+    {
+        // Modify the headers for these pages
+        urls: [
+            "http://tune.pk/video/*",
+			"http://www.xvideos.com/video*",
+			"http://xhamster.com/movies/*"
+        ],
+        // In the main window and frames
+        types: ["main_frame", "sub_frame"]
+    },
+    ["blocking", "requestHeaders"]
+);
 
 	
