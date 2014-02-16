@@ -140,6 +140,8 @@ chrome.contextMenus.create({
     } 
 });
 
+var playback_started = false // to avoid terminating playback before video loads
+var terminate_loop = false
 
 function airplay(url, position) { 
     var xhr = new XMLHttpRequest(); 
@@ -152,9 +154,11 @@ function airplay(url, position) {
 	xhr_stop.open("POST", "http://" + hostname + port + "/stop", true, "AirPlay", null);
 	xhr_stop.send(null);
 
-	var playback_started = false // to avoid terminating playback before video loads
-
     xhr.open("POST", "http://" + hostname + port + "/play", true, "AirPlay", null);
+
+	playback_started = false;
+	terminate_loop = false;
+
     xhr.addEventListener("load", function() { // set timer to prevent playback from aborting
 		var timer = setInterval(function() {
 			var xhr = new XMLHttpRequest();
@@ -162,14 +166,27 @@ function airplay(url, position) {
 			xhr.open("GET", "http://" + hostname + port + "/playback-info", true, "AirPlay", null);
 			xhr.addEventListener("load", function() {
 				playback_info_keys_count = xhr.responseXML.getElementsByTagName("key").length;
-				if (playback_started &&  playback_info_keys_count <= 2) { // playback terminated 
+				console.log("playback: " + playback_started + "; keys: " + playback_info_keys_count)
+				if (!playback_started && playback_info_keys_count > 2) { // if we're getting some actual playback info
+					playback_started = true;
+					console.log("setting playback_started = true")
+					terminate_loop = false;
+				}
+				if (terminate_loop && playback_info_keys_count <= 2) { // playback terminated 
+					console.log("stopping loop & setting playback_started = false")
 					clearInterval(timer);
 					var xhr_stop = new XMLHttpRequest();
 					xhr_stop.open("POST", "http://" + hostname + port + "/stop", true, "AirPlay", null);
-					xhr_stop.send(null);
+					xhr_stop.send(null);					
+					playback_started = false;
 				}
-				else if (!playback_started && playback_info_keys_count > 2) { // if we're getting some actual playback info
-					playback_started = true;
+				if (playback_started && playback_info_keys_count == 2) { // playback stopped, AppleTV is "readyToPlay"
+					console.log("sending /stop signal, setting playback_started = false")
+					var xhr_stop = new XMLHttpRequest();
+					xhr_stop.open("POST", "http://" + hostname + port + "/stop", true, "AirPlay", null);
+					xhr_stop.send(null);
+					playback_started = false;
+					terminate_loop = true;
 				}
 			}, false);
 			xhr.addEventListener("error", function() {clearInterval(timer);}, false);
