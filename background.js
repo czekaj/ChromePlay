@@ -210,8 +210,12 @@ function getYouTubeAirPlayUrl(youtube_url) {
 	var video_id = parseYouTubeUrl(youtube_url)
 	var video_info = getYouTubeVideoInfo(video_id);
 	var video_url = getYouTubeVideoUrlObject(video_info, "best");
-	
-	return video_url.url
+
+	var url = video_url.url
+	if (/requiressl=yes/.test(url)) {
+		url = url.replace(/^http:/, 'https:');
+	}
+	return url;
 }
 
 function startPlaying(video_url, content_type) {
@@ -242,14 +246,14 @@ chrome.pageAction.onClicked.addListener(function(tab)
 	 chrome.tabs.sendMessage(tab.id, {action: "Html5VideoUrl"}, function(response) {
 		 console.log('Response on HTML5 compatibility received');
 		 video_url = response.Html5VideoUrl;
-	     if (typeof video_url !== 'undefined') {
-			 console.log('startPlaying HTML5');
-			 startPlaying(video_url, 'video'); // HTML5 video
-	     } else {
+	     if (typeof video_url === 'undefined' || /^http(s?):\/\/(www\.)?youtube/.test(tab.url)) {
 			 console.log('startPlaying YouTube');
 			 startPlaying(tab.url) // YouTube url
+	     } else {
+			 console.log('startPlaying HTML5');
+			 return startPlaying(video_url, 'video'); // HTML5 video
 	     }
-	 });	 
+	 });
  }
 );
 
