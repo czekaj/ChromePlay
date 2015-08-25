@@ -1,13 +1,27 @@
 window.addEventListener ("load", tryToEnableChromePlay, false);
 window.addEventListener ("DOMActivate", tryToEnableChromePlay, false);
 
-function checkForHtml5VideoUrl() {
+/**
+ * Tries to find video src in given document.
+ * Uses window.document by default.
+ * 
+ * @param  {Object} [document] document to search in
+ * @return {String}            video url
+ */
+function checkForHtml5VideoUrl(document) {
+	// Fallback to the window.document if no document is given
+	document = document || window.document;
+
 	if (document.getElementsByTagName('video').length > 0) {
 		var src = document.getElementsByTagName('video')[0].src
 		if (!src) {
 			src = document.getElementsByTagName('source') ? document.getElementsByTagName('source')[0].src : null
 		}
 		return src;
+	}
+	else if (document.getElementsByTagName('iframe').length > 0 && document.getElementsByTagName('iframe')[0].contentDocument.getElementsByTagName('video').length > 0) {
+		// Recursive search within iframe if it contains any video
+		return checkForHtml5VideoUrl(document.getElementsByTagName('iframe')[0].contentDocument);
 	}
 	else {
 		var noscripts = document.getElementsByTagName('noscript');
