@@ -218,13 +218,21 @@ function getYouTubeAirPlayUrl(youtube_url) {
 	return url;
 }
 
-function startPlaying(video_url, content_type) {
+/**
+ * Starts playing video from given position
+ *
+ * @param  {String} video_url       URL for the video
+ * @param  {String} [content_type]  type of video
+ * @param  {Number} [position]      starting position between 0 and 1
+ */
+function startPlaying(video_url, content_type, position) {
 	content_type = typeof content_type === 'undefined' || content_type !== 'video' ? 'youtube' : 'video';
+	position = position || 0;
 	var airplay_url = video_url;
 	if (content_type === 'youtube') {
 		airplay_url = getYouTubeAirPlayUrl(video_url);
 	}
-	airplay(airplay_url,0);		
+	airplay(airplay_url, position);
 }
 
 function onRequest(request, sender, sendResponse) {
@@ -242,16 +250,16 @@ chrome.extension.onRequest.addListener(onRequest);
 chrome.pageAction.onClicked.addListener(function(tab)
  {
 	 console.log('Button clicked.');
-	 var video_url;
-	 chrome.tabs.sendMessage(tab.id, {action: "Html5VideoUrl"}, function(response) {
+	 var video;
+	 chrome.tabs.sendMessage(tab.id, {action: "Html5Video"}, function(response) {
 		 console.log('Response on HTML5 compatibility received');
-		 video_url = response.Html5VideoUrl;
-	     if (typeof video_url === 'undefined' || /^http(s?):\/\/(www\.)?youtube/.test(tab.url)) {
+		 video = response.Html5Video;
+	     if (typeof video === 'undefined' || /^http(s?):\/\/(www\.)?youtube/.test(tab.url)) {
 			 console.log('startPlaying YouTube');
 			 startPlaying(tab.url) // YouTube url
 	     } else {
-			 console.log('startPlaying HTML5');
-			 return startPlaying(video_url, 'video'); // HTML5 video
+			 console.log('startPlaying HTML5', video);
+			 return startPlaying(video.url, 'video', video.position); // HTML5 video
 	     }
 	 });
  }
