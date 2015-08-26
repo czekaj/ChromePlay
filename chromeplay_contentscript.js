@@ -30,11 +30,7 @@ function checkForHtml5VideoUrl(document) {
 		    el.innerHTML = noscripts[i].innerHTML;
 			el.innerHTML = el.childNodes[0].nodeValue
 			if (el.getElementsByTagName('video').length > 0) {
-				var src = el.getElementsByTagName('video')[0].src
-				if (!src) {
-					src = el.getElementsByTagName('source').length >0 ? el.getElementsByTagName('source')[0].src : null
-				}
-				return src;
+				return checkForHtml5VideoUrl(el);
 			}
 		}
 	}
