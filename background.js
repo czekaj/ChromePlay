@@ -250,16 +250,16 @@ chrome.extension.onRequest.addListener(onRequest);
 chrome.pageAction.onClicked.addListener(function(tab)
  {
 	 console.log('Button clicked.');
-	 var video_url;
-	 chrome.tabs.sendMessage(tab.id, {action: "Html5VideoUrl"}, function(response) {
+	 var video;
+	 chrome.tabs.sendMessage(tab.id, {action: "Html5Video"}, function(response) {
 		 console.log('Response on HTML5 compatibility received');
-		 video_url = response.Html5VideoUrl;
-	     if (typeof video_url === 'undefined' || /^http(s?):\/\/(www\.)?youtube/.test(tab.url)) {
+		 video = response.Html5Video;
+	     if (typeof video === 'undefined' || /^http(s?):\/\/(www\.)?youtube/.test(tab.url)) {
 			 console.log('startPlaying YouTube');
 			 startPlaying(tab.url) // YouTube url
 	     } else {
-			 console.log('startPlaying HTML5');
-			 return startPlaying(video_url, 'video'); // HTML5 video
+			 console.log('startPlaying HTML5', video);
+			 return startPlaying(video.url, 'video', video.position); // HTML5 video
 	     }
 	 });
  }

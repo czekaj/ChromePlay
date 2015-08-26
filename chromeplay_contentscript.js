@@ -6,22 +6,27 @@ window.addEventListener ("DOMActivate", tryToEnableChromePlay, false);
  * Uses window.document by default.
  * 
  * @param  {Object} [document] document to search in
- * @return {String}            video url
+ * @return {Object}            object with video url and position
  */
-function checkForHtml5VideoUrl(document) {
+function checkForHtml5Video(document) {
+	var ret = { url: null, position: 0 };
+
 	// Fallback to the window.document if no document is given
 	document = document || window.document;
 
 	if (document.getElementsByTagName('video').length > 0) {
-		var src = document.getElementsByTagName('video')[0].src
-		if (!src) {
-			src = document.getElementsByTagName('source') ? document.getElementsByTagName('source')[0].src : null
+		var video = document.getElementsByTagName('video')[0];
+		ret.url = video.src;
+		ret.position = video.currentTime/video.duration;
+		if (!ret.url) {
+			var sources = document.getElementsByTagName('source');
+			ret.url = sources.length > 0 ? sources[0].src : null;
 		}
-		return src;
+		return ret;
 	}
 	else if (document.getElementsByTagName('iframe').length > 0 && document.getElementsByTagName('iframe')[0].contentDocument.getElementsByTagName('video').length > 0) {
 		// Recursive search within iframe if it contains any video
-		return checkForHtml5VideoUrl(document.getElementsByTagName('iframe')[0].contentDocument);
+		return checkForHtml5Video(document.getElementsByTagName('iframe')[0].contentDocument);
 	}
 	else {
 		var noscripts = document.getElementsByTagName('noscript');
@@ -30,7 +35,7 @@ function checkForHtml5VideoUrl(document) {
 		    el.innerHTML = noscripts[i].innerHTML;
 			el.innerHTML = el.childNodes[0].nodeValue
 			if (el.getElementsByTagName('video').length > 0) {
-				return checkForHtml5VideoUrl(el);
+				return checkForHtml5Video(el);
 			}
 		}
 	}
@@ -38,9 +43,9 @@ function checkForHtml5VideoUrl(document) {
 
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
-    if (request.action == "Html5VideoUrl") {
-		console.log('Request message getHtml5VideoUrl received');
-        sendResponse({Html5VideoUrl: checkForHtml5VideoUrl()});
+    if (request.action == "Html5Video") {
+		console.log('Request message getHtml5Video received');
+        sendResponse({Html5Video: checkForHtml5Video()});
 		return true;
 	}
   });
@@ -57,7 +62,7 @@ function tryToEnableChromePlay(evt) {
 		function enableChromePlay() {
 			if (/^https?:\/\/(?:www\.)?youtube.com\/watch\?(?=[^?]*v=\w+)(?:[^\s?]+)?$/.test(document.URL)) {
 				chrome.extension.sendRequest({}, function(response) {}); // show the icon in omnibox
-			} else if (checkForHtml5VideoUrl()) { // we're having HTML5 video
+			} else if (checkForHtml5Video()) { // we're having HTML5 video
 				chrome.extension.sendRequest({}, function(response) {}); // show the icon in omnibox
 		   	} else if (/vimeo.com/.test(document.URL)) {
 				// some magic to enable right-clicking on Vimeo videos
