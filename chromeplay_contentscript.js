@@ -71,7 +71,7 @@ function tryToEnableChromePlay(evt) {
 		function enableChromePlay() {
 			if (/^https?:\/\/(?:www\.)?youtube.com\/watch\?(?=[^?]*v=\w+)(?:[^\s?]+)?$/.test(document.URL)) {
 				chrome.extension.sendRequest({}, function(response) {}); // show the icon in omnibox
-			} else if (checkForHtml5Video()) { // we're having HTML5 video
+			} else if (checkForHtml5Video().url) { // we're having HTML5 video
 				chrome.extension.sendRequest({}, function(response) {}); // show the icon in omnibox
 		   	} else if (/vimeo.com/.test(document.URL)) {
 				// some magic to enable right-clicking on Vimeo videos
