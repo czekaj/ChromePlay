@@ -15,21 +15,21 @@ function checkForHtml5Video(document) {
 	document = document || window.document;
 
 	var videos = document.getElementsByTagName('video');
-	if (videos.length > 0) {
-		var video = document.getElementsByTagName('video')[0];
+	for (var i=0; i<videos.length; i++) {
+		var video = videos[i];
 		ret.url = video.src;
 		ret.position = video.currentTime/video.duration;
 		if (!ret.url) {
 			var sources = document.getElementsByTagName('source');
 			ret.url = sources.length > 0 ? sources[0].src : null;
 		}
-		return ret;
+		if (ret.url) return ret;
 	}
 
 	var iframes = document.getElementsByTagName('iframe');
-	if (iframes.length > 0) {
+	for (var i=0; i<iframes.length; i++) {
 		// Recursive search within iframe if it contains any video
-		ret = checkForHtml5Video(iframes[0].contentDocument);
+		ret = checkForHtml5Video(iframes[i].contentDocument);
 		if (ret.url) return ret;
 	}
 
