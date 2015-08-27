@@ -28,9 +28,12 @@ function checkForHtml5Video(document) {
 
 	var iframes = document.getElementsByTagName('iframe');
 	for (var i=0; i<iframes.length; i++) {
-		// Recursive search within iframe if it contains any video
-		ret = checkForHtml5Video(iframes[i].contentDocument);
-		if (ret.url) return ret;
+		// Search within same origin iframes because we can't access other domains
+		if (iframes[i].src.indexOf(window.document.domain) !== -1) {
+			// Recursive search within iframe if it contains any video
+			ret = checkForHtml5Video(iframes[i].contentDocument);
+			if (ret.url) return ret;
+		}
 	}
 
 	var noscripts = document.getElementsByTagName('noscript');
