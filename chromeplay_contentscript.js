@@ -14,7 +14,8 @@ function checkForHtml5Video(document) {
 	// Fallback to the window.document if no document is given
 	document = document || window.document;
 
-	if (document.getElementsByTagName('video').length > 0) {
+	var videos = document.getElementsByTagName('video');
+	if (videos.length > 0) {
 		var video = document.getElementsByTagName('video')[0];
 		ret.url = video.src;
 		ret.position = video.currentTime/video.duration;
@@ -24,21 +25,26 @@ function checkForHtml5Video(document) {
 		}
 		return ret;
 	}
-	else if (document.getElementsByTagName('iframe').length > 0 && document.getElementsByTagName('iframe')[0].contentDocument.getElementsByTagName('video').length > 0) {
+
+	var iframes = document.getElementsByTagName('iframe');
+	if (iframes.length > 0) {
 		// Recursive search within iframe if it contains any video
-		return checkForHtml5Video(document.getElementsByTagName('iframe')[0].contentDocument);
+		ret = checkForHtml5Video(iframes[0].contentDocument);
+		if (ret.url) return ret;
 	}
-	else {
-		var noscripts = document.getElementsByTagName('noscript');
-		for (var i=0; i<noscripts.length; i++) {
-		    var el = document.createElement("div");
-		    el.innerHTML = noscripts[i].innerHTML;
-			el.innerHTML = el.childNodes[0].nodeValue
-			if (el.getElementsByTagName('video').length > 0) {
-				return checkForHtml5Video(el);
-			}
+
+	var noscripts = document.getElementsByTagName('noscript');
+	for (var i=0; i<noscripts.length; i++) {
+	    var el = document.createElement("div");
+	    el.innerHTML = noscripts[i].innerHTML;
+		el.innerHTML = el.childNodes[0].nodeValue
+		if (el.getElementsByTagName('video').length > 0) {
+			ret = checkForHtml5Video(el);
+			if (ret.url) return ret;
 		}
 	}
+
+	return ret;
 }
 
 chrome.runtime.onMessage.addListener(
