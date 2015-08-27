@@ -17,12 +17,8 @@ function checkForHtml5Video(document) {
 	var videos = document.getElementsByTagName('video');
 	for (var i=0; i<videos.length; i++) {
 		var video = videos[i];
-		ret.url = video.src;
+		ret.url = video.currentSrc;
 		ret.position = video.currentTime/video.duration;
-		if (!ret.url) {
-			var sources = document.getElementsByTagName('source');
-			ret.url = sources.length > 0 ? sources[0].src : null;
-		}
 		if (ret.url) return ret;
 	}
 
