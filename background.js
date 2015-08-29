@@ -1,13 +1,11 @@
 function getHostname()
 {
-    var hostname = localStorage["hostname"];
-    if (!hostname) {
-      return "apple-tv.local";
-    }
-	else
-	{
-		return hostname
-	}
+    return localStorage["hostname"] || "apple-tv.local";
+}
+
+function getPlayPosition()
+{
+    return localStorage["play-position"] || "current";
 }
 
 // reads and parses a query string
@@ -143,7 +141,10 @@ chrome.contextMenus.create({
 var playback_started = false // to avoid terminating playback before video loads
 var terminate_loop = false
 
-function airplay(url, position) { 
+function airplay(url, position) {
+	// Use position based on user options (or fallback to given position)
+	position = getPlayPosition() === "current" ? position : 0;
+
     var xhr = new XMLHttpRequest(); 
 	var hostname = getHostname()
     var port = ":7000"; 
