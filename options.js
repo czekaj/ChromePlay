@@ -1,8 +1,7 @@
 // Saves options to localStorage.
 function save_options() {
-  var input = document.getElementById("hostname");
-  var hostname = input.value;
-  localStorage["hostname"] = hostname;
+  localStorage["hostname"] = document.getElementById("hostname").value;
+  localStorage["play-position"] = document.getElementById("play-position-current").checked ? "current" : "0";
 
   // Update status to let user know options were saved.
   var status = document.getElementById("status");
@@ -15,14 +14,13 @@ function save_options() {
 
 // Restores select box state to saved value from localStorage.
 function restore_options() {
-  var hostname = localStorage["hostname"];
-  var input = document.getElementById("hostname");
-  if (!hostname) {
-	  input.value = "apple-tv.local";
-  }
-  else {
-	  input.value = hostname;
-  }
+  document.getElementById("hostname").value = localStorage["hostname"] || "apple-tv.local";
+
+  var play_position_inputs = {
+    "current": document.getElementById("play-position-current"),
+    "0": document.getElementById("play-position-0")
+  };
+  play_position_inputs[localStorage["play-position"] || "current"].checked = true;
 }
 document.addEventListener('DOMContentLoaded', restore_options);
 document.querySelector('#save').addEventListener('click', save_options);
