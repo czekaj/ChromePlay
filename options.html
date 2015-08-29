@@ -3,11 +3,37 @@
 
 <body>
     <h3>ChromePlay Extension Options</h3>
-AppleTV hostname:
-<input id="hostname"></input>
-<br>
-<div id="status"></div>
-<button id="save">Save</button>
+
+	<p>
+		AppleTV hostname:
+		<input id="hostname"></input>
+	</p>
+
+	<hr>
+
+	<p>
+		Start playing HTML5 videos:
+	</p>
+
+	<p>		
+		<input id="play-position-current" name="play-position" value="current" type="radio"></input>
+		<label for="play-position-current">from current position</label>
+	</p>
+
+	<p>
+		<input id="play-position-0" name="play-position" value="0" type="radio"></input>
+		<label for="play-position-0">from the beginning</label>
+	</p>
+
+	<hr>
+
+	<p>
+		<div id="status"></div>
+	</p>
+
+	<p>
+		<button id="save">Save</button>
+	</p>
 </body>
 
 <script src="options.js"></script>
