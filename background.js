@@ -122,6 +122,7 @@ function parseWithRegExp(text, regex, processValue) { // regex needs 'g' flag
 }
 function parseFlashVariables(s) {return parseWithRegExp(s, /([^&=]*)=([^&]*)/g);}
 
+chrome.contextMenus.removeAll();
 chrome.contextMenus.create({
     "type":"normal", 
     "title":"AirPlay it!", 
