@@ -1,19 +1,22 @@
 // Saves options to localStorage.
-function save_options() {
+function saveOptions(event) {
+  event.preventDefault();
+
   localStorage["hostname"] = document.getElementById("hostname").value;
   localStorage["play-position"] = document.getElementById("play-position-current").checked ? "current" : "0";
 
-  // Update status to let user know options were saved.
-  var status = document.getElementById("status");
-  status.innerHTML = "Options saved.";
-  setTimeout(function() {
-    status.innerHTML = "";
-  }, 750);
   chrome.extension.getBackgroundPage().window.location.reload();
+
+  // Show status to let user know options were saved.
+  var status = document.getElementById("status");
+  status.className = "alert alert-dismissible alert-success fade in"
+  setTimeout(function() {
+    status.className = "invisible";
+  }, 2000);
 }
 
 // Restores select box state to saved value from localStorage.
-function restore_options() {
+function restoreOptions() {
   document.getElementById("hostname").value = localStorage["hostname"] || "apple-tv.local";
 
   var play_position_inputs = {
@@ -22,5 +25,5 @@ function restore_options() {
   };
   play_position_inputs[localStorage["play-position"] || "current"].checked = true;
 }
-document.addEventListener('DOMContentLoaded', restore_options);
-document.querySelector('#save').addEventListener('click', save_options);
+document.addEventListener('DOMContentLoaded', restoreOptions);
+document.querySelector('#save').addEventListener('click', saveOptions);

@@ -1,41 +1,45 @@
+<!DOCTYPE html>
 <html>
-<head><title>ChromePlay Extension Options</title></head>
 
+<head>
+  <title>ChromePlay Extension Options</title>
+  <link rel="stylesheet" href="https://bootswatch.com/cosmo/bootstrap.min.css"></head>
 <body>
-    <h3>ChromePlay Extension Options</h3>
-
-	<p>
-		AppleTV hostname:
-		<input id="hostname"></input>
-	</p>
-
-	<hr>
-
-	<p>
-		Start playing HTML5 videos:
-	</p>
-
-	<p>		
-		<input id="play-position-current" name="play-position" value="current" type="radio"></input>
-		<label for="play-position-current">from current position</label>
-	</p>
-
-	<p>
-		<input id="play-position-0" name="play-position" value="0" type="radio"></input>
-		<label for="play-position-0">from the beginning</label>
-	</p>
-
-	<hr>
-
-	<p>
-		<div id="status"></div>
-	</p>
-
-	<p>
-		<button id="save">Save</button>
-	</p>
-</body>
-
+  <div style="width: 600px; margin: 15px;">
+  <form class="form-horizontal">
+    <legend>ChromePlay Extension Options </legend>
+    <div class="form-group">
+      <label for="hostname" class="col-lg-5 control-label">AppleTV hostname</label>
+      <div class="col-lg-5">
+        <input type="text" class="form-control" id="hostname" placeholder="IP or hostname + .local"> </div>
+    </div>
+    <div class="form-group">
+      <label class="col-lg-5 control-label">Start playing HTML5 videos</label>
+      <div class="col-lg-5">
+        <div class="radio">
+          <label>
+            <input id="play-position-current" name="play-position" value="current" type="radio"> from current position </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input id="play-position-0" name="play-position" value="0" type="radio"> from the beginning </label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-lg-5 col-lg-offset-5">
+        <button id="save" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+    <div id="status" class="invisible">Options saved</div>
+    <legend>About</legend>
+    <img src="icon.png" alt="ChromePlay logo" style="float:left;margin-right: 10px; width:50px">
+    <p>
+ChromePlay extension was developed by <a href="https://twitter.com/LukaszCzekaj">Lucas Czekaj</a>.<br />
+Source code and updates: <a href="https://github.com/czekaj/ChromePlay">https://github.com/czekaj/ChromePlay</a></p>
+  </form>
+</div>
 <script src="options.js"></script>
+</body>
 
 </html>

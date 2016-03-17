@@ -24,7 +24,7 @@ function getYouTubeVideoInfo(video_id)
 //	for(var i in el_types)
 //	{
 		var request = new XMLHttpRequest();
-		var requesturl = prefix+"www.youtube.com/get_video_info?&video_id=" + video_id //+ el_types[i] 
+		var requesturl = prefix+"www.youtube.com/get_video_info?&video_id=" + video_id //+ el_types[i]
 		+"&eurl=http%3A%2F%2Fwww%2Eyoutube%2Ecom%2F&sts=1588";
 		request.open('GET', requesturl, false);
 		request.send(); // synchronous requests! don't tell mom
@@ -64,16 +64,16 @@ function getYouTubeVideoUrlObject(video_info, quality)
 		{
 			var url_info = readQueryString(url_data_strs[i]);
 			fmt = parseFlashVariables(url_data_strs[i]);
-			
+
 			url_info.url = url_info.url.replace(/^https/, "http");
-			
+
 			if(url_info.sig)
 				url_info.url += '&signature=' + url_info.sig;
-			else if(fmt.s) 
+			else if(fmt.s)
 				url_info.url += "&signature=" + decodeSignature(fmt.s);
 
-			if(url_info.url 
-				&& url_info.itag 
+			if(url_info.url
+				&& url_info.itag
 				&& url_info.type.lastIndexOf("video/mp4;",0) === 0 // we want only MP4 streams
 				&& parseInt(url_info.itag) < 82 // we don't want 3D
 			){
@@ -124,19 +124,19 @@ function parseFlashVariables(s) {return parseWithRegExp(s, /([^&=]*)=([^&]*)/g);
 
 chrome.contextMenus.removeAll();
 chrome.contextMenus.create({
-    "type":"normal", 
-    "title":"AirPlay it!", 
-    "contexts":["link", "video"], 
+    "type":"normal",
+    "title":"AirPlay it!",
+    "contexts":["link", "video"],
     "onclick": function (info, tab) {
 		if (typeof info.linkUrl !== 'undefined') { // link clicked
-			console.log("Right click - Sending url: " + info.linkUrl + " mediaType: " + info.mediaType) 
+			console.log("Right click - Sending url: " + info.linkUrl + " mediaType: " + info.mediaType)
 			startPlaying(info.linkUrl, info.mediaType)
 		}
 		else if (info.mediaType === 'video') { // HTML5 video clicked
-			console.log("Right click - Sending video: " + info.srcUrl) 
+			console.log("Right click - Sending video: " + info.srcUrl)
 			startPlaying(info.srcUrl, info.mediaType)
 		}
-    } 
+    }
 });
 
 var playback_started = false // to avoid terminating playback before video loads
@@ -146,9 +146,9 @@ function airplay(url, position) {
 	// Use position based on user options (or fallback to given position)
 	position = getPlayPosition() === "current" ? position : 0;
 
-    var xhr = new XMLHttpRequest(); 
+    var xhr = new XMLHttpRequest();
 	var hostname = getHostname()
-    var port = ":7000"; 
+    var port = ":7000";
     if(/: \d + $ / .test(hostname)) port = "";
 
 	// stop currently playing video
@@ -174,12 +174,12 @@ function airplay(url, position) {
 					console.log("setting playback_started = true")
 					terminate_loop = false;
 				}
-				if (terminate_loop && playback_info_keys_count <= 2) { // playback terminated 
+				if (terminate_loop && playback_info_keys_count <= 2) { // playback terminated
 					console.log("stopping loop & setting playback_started = false")
 					clearInterval(timer);
 					var xhr_stop = new XMLHttpRequest();
 					xhr_stop.open("POST", "http://" + hostname + port + "/stop", true, "AirPlay", null);
-					xhr_stop.send(null);					
+					xhr_stop.send(null);
 					playback_started = false;
 				}
 				if (playback_started && playback_info_keys_count == 2) { // playback stopped, AppleTV is "readyToPlay"
@@ -194,7 +194,7 @@ function airplay(url, position) {
 			xhr.addEventListener("error", function() {clearInterval(timer);}, false);
 			xhr.send(null);
 		}, 5000);
-	}, false); 
+	}, false);
     xhr.setRequestHeader("Content-Type", "text/parameters"); xhr.send("Content-Location: " + url +
     "\nStart-Position: " + position + "\n");
 }
@@ -234,6 +234,7 @@ function startPlaying(video_url, content_type, position) {
 	if (content_type === 'youtube') {
 		airplay_url = getYouTubeAirPlayUrl(video_url);
 	}
+  console.log("airplay_url: " + airplay_url);
 	airplay(airplay_url, position);
 }
 
@@ -273,10 +274,10 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
         // Replace the User-Agent header
         var headers = info.requestHeaders;
         headers.forEach(function(header, i) {
-            if (header.name.toLowerCase() == 'user-agent') { 
+            if (header.name.toLowerCase() == 'user-agent') {
                 header.value = 'Mozilla/5.0 (iPad; CPU OS 7_0_4 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) Version/7.0 Mobile/11B554a Safari/9537.53'; // iPadify page to get HTML5 video
             }
-        });  
+        });
         return {requestHeaders: headers};
     },
     // Request filter
@@ -292,5 +293,3 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
     },
     ["blocking", "requestHeaders"]
 );
-
-	

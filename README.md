@@ -4,32 +4,38 @@ Google Chrome extension - send YouTube, Vimeo and (almost) any HTML5 video to Ap
 
 ![ChromePlay logo](https://github.com/czekaj/ChromePlay/raw/master/icon.png "ChromePlay")
 
-Features in v1.2.0
-------------------
-- YouTube AirPlay (click/right-click)
-- Vimeo AirPlay (right-click)
-- HTML5 video AirPlay (right-click)
+Changes
+--
+
+1.4 Refreshed options page
+
+v1.3 Bugfixes
+
+v1.2 New features:
++ YouTube AirPlay (click/right-click)
++ Vimeo AirPlay (right-click)
++ HTML5 video AirPlay (right-click)
 
 Usage
------
+--
 **YouTube**  
-  
+
 - Click the extension icon while watching a video on youtube.com to send it to your AppleTV  
-  
+
 ![ChromePlay YouTube click](https://github.com/czekaj/ChromePlay/raw/master/images/chromeplay-click.png "ChromePlay YouTube click")  
-  
-  
+
+
 - Right click a youtube.com link and select "AirPlay it!" to send it to your AppleTV  
-  
+
 ![ChromePlay YouTube right-click](https://github.com/czekaj/ChromePlay/raw/master/images/chromeplay-right_click.png "ChromePlay YouTube right-click")  
 
 **Vimeo & HTML5 videos**  
-  
+
 - Press Start & Pause in HTML5 player, right-click on the player and select "AirPlay it!" to send it to your AppleTV  
-  
+
 ![ChromePlay HTML5 right-click](https://github.com/czekaj/ChromePlay/raw/master/images/chromeplay-right_click_html5.png "ChromePlay HTML5 right-click")  
-  
-  
+
+
 FAQ
 ---
 
@@ -38,10 +44,14 @@ FAQ
 
 - Q: *I click the icon but nothing happens.*
 - A: **Make sure your AppleTV hostname is configured properly on the Options page**
-    - Look at Settings->General->Name of your AppleTV. 
+    - Look at Settings->General->Name of your AppleTV.
     - Replace spaces with dashes (-)
     - add .local suffix
     - e.g. if your AppleTV is named "Office Apple TV" then the hostname will be: Office-Apple-TV.local
+
+
+- Q: *I can't see ChromePlay icon in my URL bar anymore.*
+- A: **With Chrome 48 all extension icons have been moved to the right of the url bar. If you have hidden ChromePlay icon using "Hide in Chrome menu" you will find it under the hamburger menu on the very right.**
 
 Installation
 ------------
@@ -59,4 +69,4 @@ Notes
 - HTML5 right-click AirPlaying supports only MP4 video format
 - You can change default AppleTV hostname on the Options page
 - Google Chrome has to be running while watching video but the actual streaming is done exclusively by AppleTV. There's no need to keep the video page open.
-- Tested with Google Chrome 33 beta on OSX Mavericks and Google Chrome 32 stable on Windows 7 x64.
+- Tested with Google Chrome 48 on OSX 10.11 El Capitan and Google Chrome 32 stable on Windows 7 x64.
