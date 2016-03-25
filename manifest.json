@@ -1,47 +1,46 @@
 {
-    "background": {
-        "scripts": [
-            "background.js"
-        ]
-    },
-    "content_scripts": [
-        {
-            "all_frames": false,
-            "js": [
-                "chromeplay_contentscript.js"
-            ],
-            "matches": [
-                "http://*/*",
-                "https://*/*"
-            ],
-            "run_at": "document_end"
-        }
+  "background": {
+    "scripts": [
+      "build/background.bundle.js"
+    ]
+  },
+  "content_scripts": [{
+    "all_frames": false,
+    "js": [
+      "build/content.bundle.js"
     ],
-    "description": "This extension allows sending YouTube and HTML5 videos to AppleTV via AirPlay",
-    "icons": {
-        "128": "icon.png",
-        "16": "icon.png",
-        "48": "icon.png"
-    },
-    "manifest_version": 2,
-    "name": "ChromePlay",
-    "options_page": "options.html",
-    "page_action": {
-        "default_icon": {
-            "19": "icon.png",
-            "38": "icon.png"
-        },
-        "default_title": "AirPlay it!"
-    },
-    "permissions": [
-        "activeTab",
-        "background",
-        "contextMenus",
-        "https://www.youtube.com/",
-        "http://*/*",
-        "http://*.local:7000/",
-		"webRequest",
-		"webRequestBlocking"
+    "matches": [
+      "http://*/*",
+      "https://*/*"
     ],
-    "version": "1.4.0"
+    "run_at": "document_end"
+  }],
+  "description": "This extension allows sending YouTube and HTML5 videos to AppleTV via AirPlay",
+  "icons": {
+    "128": "icon.png",
+    "16": "icon.png",
+    "48": "icon.png"
+  },
+  "manifest_version": 2,
+  "name": "ChromePlay",
+  "options_page": "options.html",
+  "page_action": {
+    "default_icon": {
+      "19": "icon.png",
+      "38": "icon.png"
+    },
+    "default_title": "AirPlay it!",
+    "default_hostname": "apple-tv.local"
+  },
+  "permissions": [
+    "activeTab",
+    "background",
+    "contextMenus",
+    "https://www.youtube.com/",
+    "http://*/*",
+    "http://*.local:7000/",
+    "webRequest",
+    "webRequestBlocking"
+  ],
+  "version": "1.4.1"
 }
