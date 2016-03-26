@@ -10,9 +10,8 @@ function getIdFromUrl(url) {
   return videoId;
 }
 
-function getVideoInfo(videoId) {
+function getVideoInfo(videoId, request) {
   const protocol = "https://";
-  const request = new XMLHttpRequest();
   const requesturl = `${protocol}www.youtube.com/get_video_info?&video_id=${videoId}`
     + "&eurl=http%3A%2F%2Fwww%2Eyoutube%2Ecom%2F&sts=1588";
   request.open("GET", requesturl, false);
@@ -29,7 +28,9 @@ function getVideoInfo(videoId) {
   return null;
 }
 function getVideoUrlObject(videoInfo, quality) {
-  if (videoInfo.conn && videoInfo.conn.startsWith("rtmp")) return videoInfo.conn;
+  let videoUrlObj = null;
+  if (videoInfo.conn && videoInfo.conn.startsWith("rtmp"))
+    videoUrlObj = videoInfo.conn;
   else if (videoInfo.url_encoded_fmt_stream_map
     && videoInfo.url_encoded_fmt_stream_map.length > 1) {
     const urlData = [];
@@ -72,23 +73,25 @@ function getVideoUrlObject(videoInfo, quality) {
     if (quality !== undefined && quality !== null) {
       if (quality === "best") {
         console.log("Sending video format " + urlData[0].type + " itag=" + urlData[0].itag + " to your AppleTV")
-        return urlData[0];
+        videoUrlObj = urlData[0];
       } else if (quality == "worst") return urlData[urlData.length - 1];
-      else return urlData_closest_quality(quality);
-    } else return urlData;
-  } else console.log("Don\'t understand video info.");
-
-  return null;
+      else videoUrlObj = urlData_closest_quality(quality);
+    } else videoUrlObj = urlData;
+  } else {
+    console.log("Don\'t understand video info.");
+    videoUrlObj = null;
+  }
+  if (videoUrlObj && videoUrlObj.url && /requiressl=yes/.test(videoUrlObj.url)) {
+    videoUrlObj.url = videoUrlObj.url.replace(/^http:/, "https:");
+  }
+  return videoUrlObj;
 }
 function getAirPlayUrl(url) {
   const videoId = getIdFromUrl(url);
-  const videoInfo = getVideoInfo(videoId);
+  const videoInfo = getVideoInfo(videoId, new XMLHttpRequest());
   const videoUrlObj = getVideoUrlObject(videoInfo, "best");
 
   let airplayUrl = videoUrlObj.url;
-  if (/requiressl=yes/.test(airplayUrl)) {
-    airplayUrl = airplayUrl.replace(/^http:/, "https:");
-  }
   return airplayUrl;
 }
 
@@ -96,4 +99,5 @@ module.exports = {
   getAirPlayUrl,
   getIdFromUrl,
   getVideoInfo,
+  getVideoUrlObject,
 };

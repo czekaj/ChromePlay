@@ -1,6 +1,6 @@
 "use strict";
 
-function parseWithRegExp(text, regex, processValue) { // regex needs 'g' flag
+exports.parseWithRegExp = function (text, regex, processValue) { // regex needs 'g' flag
   const obj = {};
   if (!text) return obj;
   if (processValue === undefined) {
@@ -13,7 +13,7 @@ function parseWithRegExp(text, regex, processValue) { // regex needs 'g' flag
     obj[match[1]] = processValue(match[2]);
   }
   return obj;
-}
+};
 
 // decode youtube video signature
 exports.decodeSignature = function (signature) {
@@ -40,5 +40,5 @@ exports.parseQueryString = function (qs) {
 };
 
 exports.parseFlashVariables = function (s) {
-  return parseWithRegExp(s, /([^&=]*)=([^&]*)/g);
+  return this.parseWithRegExp(s, /([^&=]*)=([^&]*)/g);
 };

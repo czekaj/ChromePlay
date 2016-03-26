@@ -1,41 +1,41 @@
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-
+/******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-
+/******/
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
 /******/ 			return installedModules[moduleId].exports;
-
+/******/
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			exports: {},
 /******/ 			id: moduleId,
 /******/ 			loaded: false
 /******/ 		};
-
+/******/
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-
+/******/
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
-
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-
-
+/******/
+/******/
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-
+/******/
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-
+/******/
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-
+/******/
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
 /******/ })
@@ -45,13 +45,13 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	const youtube = __webpack_require__(1);
-
+	
 	const manifest = chrome.runtime.getManifest();
 	const storage = {
 	  hostname: localStorage.hostname || manifest.page_action.default_hostname,
 	  position: localStorage["play-position"] || "current",
 	};
-
+	
 	chrome.contextMenus.removeAll();
 	chrome.contextMenus.create({
 	  type: "normal",
@@ -67,29 +67,29 @@
 	    }
 	  }
 	});
-
+	
 	var playback_started = false; // to avoid terminating playback before video loads
 	var terminate_loop = false;
-
+	
 	function airplay(url, position) {
 	  // Use position based on user options (or fallback to given position)
 	  position = storage.position === "current" ? position : 0;
-
+	
 	  const xhr = new XMLHttpRequest();
 	  const xhr_stop = new XMLHttpRequest();
 	  const hostname = storage.hostname;
 	  const port = ":7000";
 	  if (/: \d + $ /.test(hostname)) port = "";
-
+	
 	  // stop currently playing video
 	  xhr_stop.open("POST", "http://" + hostname + port + "/stop", true, "AirPlay", null);
 	  xhr_stop.send(null);
-
+	
 	  xhr.open("POST", "http://" + hostname + port + "/play", true, "AirPlay", null);
-
+	
 	  playback_started = false;
 	  terminate_loop = false;
-
+	
 	  xhr.addEventListener("load", function () { // set timer to prevent playback from aborting
 	    var timer = setInterval(function () {
 	      var xhr = new XMLHttpRequest();
@@ -131,7 +131,7 @@
 	  xhr.send(`Content-Location: ${url}`
 	    + `\nStart-Position: ${position}\n`);
 	}
-
+	
 	/**
 	 * Starts playing video from given position
 	 *
@@ -149,7 +149,7 @@
 	  console.log("airplayUrl: " + airplayUrl);
 	  airplay(airplayUrl, position);
 	}
-
+	
 	function onRequest(request, sender, sendResponse) {
 	  // Show the page action for the tab that the sender (content script)
 	  // was on.
@@ -157,10 +157,10 @@
 	  // Return nothing to let the connection be cleaned up.
 	  sendResponse({});
 	}
-
+	
 	// Listen for the content script to send a message to the background page.
 	chrome.extension.onRequest.addListener(onRequest);
-
+	
 	chrome.pageAction.onClicked.addListener(function (tab) {
 	  console.log('Button clicked.');
 	  var video;
@@ -178,7 +178,7 @@
 	    }
 	  });
 	});
-
+	
 	// some websites use HTML5 video if viewed on iPad
 	chrome.webRequest.onBeforeSendHeaders.addListener(
 	  function (info) {
@@ -212,7 +212,7 @@
 
 	"use strict";
 	const parser = __webpack_require__(2);
-
+	
 	function getIdFromUrl(url) {
 	  let videoId = url.split("v=")[1];
 	  const ampersandPosition = videoId.indexOf("&");
@@ -221,15 +221,14 @@
 	  }
 	  return videoId;
 	}
-
-	function getVideoInfo(videoId) {
+	
+	function getVideoInfo(videoId, request) {
 	  const protocol = "https://";
-	  const request = new XMLHttpRequest();
 	  const requesturl = `${protocol}www.youtube.com/get_video_info?&video_id=${videoId}`
 	    + "&eurl=http%3A%2F%2Fwww%2Eyoutube%2Ecom%2F&sts=1588";
 	  request.open("GET", requesturl, false);
 	  request.send(); // synchronous requests! don't tell mom
-
+	
 	  if (request.status === 200) {
 	    const q = parser.parseQueryString(request.responseText);
 	    // if it has a token it's good enough
@@ -241,7 +240,9 @@
 	  return null;
 	}
 	function getVideoUrlObject(videoInfo, quality) {
-	  if (videoInfo.conn && videoInfo.conn.startsWith("rtmp")) return videoInfo.conn;
+	  let videoUrlObj = null;
+	  if (videoInfo.conn && videoInfo.conn.startsWith("rtmp"))
+	    videoUrlObj = videoInfo.conn;
 	  else if (videoInfo.url_encoded_fmt_stream_map
 	    && videoInfo.url_encoded_fmt_stream_map.length > 1) {
 	    const urlData = [];
@@ -263,9 +264,9 @@
 	    for (const i in urlDataStrs) {
 	      const urlInfo = parser.parseQueryString(urlDataStrs[i]);
 	      const fmt = parser.parseFlashVariables(urlDataStrs[i]);
-
+	
 	      urlInfo.url = urlInfo.url.replace(/^https/, "http");
-
+	
 	      if (urlInfo.sig) {
 	        urlInfo.url += "&signature=${urlInfo.sig}";
 	      }
@@ -280,34 +281,37 @@
 	      }
 	    }
 	    urlData.sort(urlDataSortFunc);
-
+	
 	    if (quality !== undefined && quality !== null) {
 	      if (quality === "best") {
 	        console.log("Sending video format " + urlData[0].type + " itag=" + urlData[0].itag + " to your AppleTV")
-	        return urlData[0];
+	        videoUrlObj = urlData[0];
 	      } else if (quality == "worst") return urlData[urlData.length - 1];
-	      else return urlData_closest_quality(quality);
-	    } else return urlData;
-	  } else console.log("Don\'t understand video info.");
-
-	  return null;
+	      else videoUrlObj = urlData_closest_quality(quality);
+	    } else videoUrlObj = urlData;
+	  } else {
+	    console.log("Don\'t understand video info.");
+	    videoUrlObj = null;
+	  }
+	  if (videoUrlObj && videoUrlObj.url && /requiressl=yes/.test(videoUrlObj.url)) {
+	    videoUrlObj.url = videoUrlObj.url.replace(/^http:/, "https:");
+	  }
+	  return videoUrlObj;
 	}
 	function getAirPlayUrl(url) {
 	  const videoId = getIdFromUrl(url);
-	  const videoInfo = getVideoInfo(videoId);
+	  const videoInfo = getVideoInfo(videoId, new XMLHttpRequest());
 	  const videoUrlObj = getVideoUrlObject(videoInfo, "best");
-
+	
 	  let airplayUrl = videoUrlObj.url;
-	  if (/requiressl=yes/.test(airplayUrl)) {
-	    airplayUrl = airplayUrl.replace(/^http:/, "https:");
-	  }
 	  return airplayUrl;
 	}
-
+	
 	module.exports = {
 	  getAirPlayUrl,
 	  getIdFromUrl,
 	  getVideoInfo,
+	  getVideoUrlObject,
 	};
 
 
@@ -316,8 +320,8 @@
 /***/ function(module, exports) {
 
 	"use strict";
-
-	function parseWithRegExp(text, regex, processValue) { // regex needs 'g' flag
+	
+	exports.parseWithRegExp = function (text, regex, processValue) { // regex needs 'g' flag
 	  const obj = {};
 	  if (!text) return obj;
 	  if (processValue === undefined) {
@@ -330,8 +334,8 @@
 	    obj[match[1]] = processValue(match[2]);
 	  }
 	  return obj;
-	}
-
+	};
+	
 	// decode youtube video signature
 	exports.decodeSignature = function (signature) {
 	  let s = signature.split("");
@@ -355,11 +359,12 @@
 	  }
 	  return params;
 	};
-
+	
 	exports.parseFlashVariables = function (s) {
-	  return parseWithRegExp(s, /([^&=]*)=([^&]*)/g);
+	  return this.parseWithRegExp(s, /([^&=]*)=([^&]*)/g);
 	};
 
 
 /***/ }
 /******/ ]);
+//# sourceMappingURL=background.bundle.js.map
