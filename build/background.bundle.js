@@ -52,6 +52,30 @@
 	  position: localStorage["play-position"] || "current",
 	};
 	
+	// let's make it think we're on Safari so can support pretty much all YouTube videos
+	// including VEVO
+	// because ytplayer is getting additional hlsvp property on Safari
+	chrome.webRequest.onBeforeSendHeaders.addListener(
+	    function(info) {
+	        // Replace the User-Agent header
+	        var headers = info.requestHeaders;
+	        headers.forEach(function(header, i) {
+	            if (header.name.toLowerCase() == 'user-agent') {
+	                header.value = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/601.4.4 (KHTML, like Gecko) Version/9.0.3 Safari/601.4.4';
+	            }
+	        });
+	        return {requestHeaders: headers};
+	    },
+	    // Request filter
+	    {
+	        // Modify the headers for these pages
+	        urls: [
+	            "https://www.youtube.com/*"
+	        ],
+	    },
+	    ["blocking", "requestHeaders"]
+	);
+	
 	chrome.contextMenus.removeAll();
 	chrome.contextMenus.create({
 	  type: "normal",
@@ -132,6 +156,12 @@
 	    + `\nStart-Position: ${position}\n`);
 	}
 	
+	function startPlayingYouTube(videoUrl, position, ytPlayer) {
+	  airplayUrl = youtube.getAirPlayUrl(videoUrl, ytPlayer);
+	  console.log("airplayUrl: " + airplayUrl);
+	  airplay(airplayUrl, position);
+	  }
+	
 	/**
 	 * Starts playing video from given position
 	 *
@@ -169,11 +199,15 @@
 	  }, function (response) {
 	    console.log('Response on HTML5 compatibility received');
 	    video = response.Html5Video;
-	    if (typeof video === 'undefined' || /^http(s?):\/\/(www\.)?youtube/.test(tab.url)) {
-	      console.log('startPlaying YouTube');
-	      startPlaying(tab.url) // YouTube url
+	    if (/^http(s?):\/\/(www\.)?youtube/.test(tab.url) || typeof video === 'undefined') {
+	      console.log('Recognized page as YouTube video');
+	      chrome.tabs.sendMessage(tab.id, {
+	        action: "getYtPlayer"
+	      }, function (response_yt_player) {
+	        startPlayingYouTube(tab.url, "0", response_yt_player); // YouTube url and player object
+	      });
 	    } else {
-	      console.log('startPlaying HTML5', video);
+	      console.log('Recognized page as containing HTML5 video', video);
 	      return startPlaying(video.url, 'video', video.position); // HTML5 video
 	    }
 	  });
@@ -222,10 +256,15 @@
 	  return videoId;
 	}
 	
-	function getVideoInfo(videoId, request) {
+	function getVideoInfo(videoId, request, elType) {
 	  const protocol = "https://";
-	  const requesturl = `${protocol}www.youtube.com/get_video_info?&video_id=${videoId}`
-	    + "&eurl=http%3A%2F%2Fwww%2Eyoutube%2Ecom%2F&sts=1588";
+	  if (!elType) {
+	    elType = "";
+	  }
+	  const requesturl = `${protocol}www.youtube.com/get_video_info?video_id=${videoId}${elType}`
+	    + "&eurl=http%3A%2F%2Fwww%2Eyoutube%2Ecom%2F&ps=default&eurl=&gl=US&hl=en&sts=";
+	  console.log("videoId: " + videoId + ", elType: " + elType  +  ", requesturl: " + requesturl);
+	
 	  request.open("GET", requesturl, false);
 	  request.send(); // synchronous requests! don't tell mom
 	
@@ -233,23 +272,109 @@
 	    const q = parser.parseQueryString(request.responseText);
 	    // if it has a token it's good enough
 	    if (q.token) {
+	      if (q.hlsvp) {
+	        console.log("HLS info found!");
+	      }
 	      return q;
 	    }
 	  }
 	  // can't get video info
 	  return null;
 	}
-	function getVideoUrlObject(videoInfo, quality) {
+	function replaceHttpsIfNeeded(videoUrlObj) {
+	  if (videoUrlObj && videoUrlObj.url && /requiressl=yes/.test(videoUrlObj.url)) {
+	    videoUrlObj.url = videoUrlObj.url.replace(/^http:/, "https:");
+	  }
+	  return videoUrlObj
+	}
+	function getVideoUrlObject(videoInfos, quality, ytPlayer) {
+	  //console.log("videoInfos: %j", videoInfos);
 	  let videoUrlObj = null;
-	  if (videoInfo.conn && videoInfo.conn.startsWith("rtmp"))
-	    videoUrlObj = videoInfo.conn;
-	  else if (videoInfo.url_encoded_fmt_stream_map
-	    && videoInfo.url_encoded_fmt_stream_map.length > 1) {
-	    const urlData = [];
-	    const urlDataStrs = videoInfo.url_encoded_fmt_stream_map.split(",");
-	    const urlDataSortFunc = function (a, b) {
-	      return b.itag - a.itag;
-	    };
+	  let urlData = [];
+	  const urlDataSortFunc = function (a, b) {
+	    return b.itag - a.itag;
+	  };
+	
+	  for (const i in videoInfos) {
+	    const videoInfo = videoInfos[i];
+	    // RTMP protocol handling
+	    if (videoInfo.conn && videoInfo.conn.startsWith("rtmp")) {
+	      videoUrlObj = videoInfo.conn;
+	    }
+	    else {
+	      let formatMap = null;
+	      let is_hls = false;
+	
+	      if (videoInfo.hlsvp != null) {
+	        formatMap = ytPlayer.args.hlsvp;
+	        urlData.push({
+	          url: videoInfo.hlsvp,
+	          itag: 9999,
+	        });
+	        console.log("hlsvp format map found in videoInfo");
+	        is_hls = true;
+	      }
+	      if (!is_hls && ytPlayer && ytPlayer.args && ytPlayer.args.hlsvp) {
+	        formatMap = ytPlayer.args.hlsvp;
+	        urlData.push({
+	          url: ytPlayer.args.hlsvp,
+	          itag: 9999,
+	        });
+	        console.log("hlsvp format map found in ytPlayer");
+	        is_hls = true;
+	      } else {
+	        formatMap = videoInfo.adaptive_fmts;
+	      }
+	      if (!formatMap || formatMap.length < 1) {
+	        if (videoInfo.url_encoded_fmt_stream_map
+	          && videoInfo.url_encoded_fmt_stream_map.length > 1) {
+	          formatMap = videoInfo.url_encoded_fmt_stream_map;
+	        }
+	      }
+	      if (formatMap && !is_hls) {
+	              const urlDataStrs = formatMap.split(",");
+	              for (const i in urlDataStrs) {
+	                const urlInfo = parser.parseQueryString(urlDataStrs[i]);
+	                const fmt = parser.parseFlashVariables(urlDataStrs[i]);
+	                urlInfo.url = urlInfo.url.replace(/^https/, "http");
+	                if (urlInfo.sig) {
+	                  urlInfo.url += "&signature=${urlInfo.sig}";
+	                }
+	                else
+	                  if (fmt.s) {
+	                    urlInfo.url += "&signature=" + parser.decodeSignature(fmt.s);
+	                  }
+	                if (is_hls || (urlInfo.url && urlInfo.itag
+	                  && urlInfo.type.lastIndexOf("video/mp4;", 0) === 0 // we want only MP4 streams
+	                  && parseInt(urlInfo.itag) != 82 // we don't want 3D
+	                  && parseInt(urlInfo.itag) != 83 // we don't want 3D
+	                  && parseInt(urlInfo.itag) != 84 // we don't want 3D
+	                  && parseInt(urlInfo.itag) != 85 // we don't want 3D
+	                  && parseInt(urlInfo.itag) != 160 // we don't want 144px video
+	                  )
+	                ){
+	                  urlData.push(urlInfo);
+	                }
+	              }
+	        } else if (!formatMap) {
+	          console.log("Don\'t understand video info.");
+	          videoUrlObj = null;
+	        }
+	      }
+	  }
+	  urlData.sort(urlDataSortFunc);
+	
+	  console.log("urlData: %j", urlData);
+	
+	  if (quality !== undefined && quality !== null) {
+	    if (quality === "best") {
+	      console.log("Sending video format " + urlData[0].type + " itag=" + urlData[0].itag + " to your AppleTV")
+	      videoUrlObj = urlData[0];
+	    } else if (quality == "worst") return urlData[urlData.length - 1];
+	    else videoUrlObj = urlData_closest_quality(quality);
+	  } else videoUrlObj = urlData;
+	
+	    /*
 	    const urlDataGetQuality = function (quality) {
 	      for (const i in urlData) {
 	        if ({}.hasOwnProperty.call(urlData, i)) {
@@ -261,50 +386,16 @@
 	      }
 	      return urlData[0];
 	    };
-	    for (const i in urlDataStrs) {
-	      const urlInfo = parser.parseQueryString(urlDataStrs[i]);
-	      const fmt = parser.parseFlashVariables(urlDataStrs[i]);
-	
-	      urlInfo.url = urlInfo.url.replace(/^https/, "http");
-	
-	      if (urlInfo.sig) {
-	        urlInfo.url += "&signature=${urlInfo.sig}";
-	      }
-	      else
-	        if (fmt.s) {
-	          urlInfo.url += "&signature=" + parser.decodeSignature(fmt.s);
-	        }
-	      if (urlInfo.url && urlInfo.itag && urlInfo.type.lastIndexOf("video/mp4;", 0) === 0 // we want only MP4 streams
-	        && parseInt(urlInfo.itag) < 82 // we don't want 3D
-	      ) {
-	        urlData.push(urlInfo);
-	      }
-	    }
-	    urlData.sort(urlDataSortFunc);
-	
-	    if (quality !== undefined && quality !== null) {
-	      if (quality === "best") {
-	        console.log("Sending video format " + urlData[0].type + " itag=" + urlData[0].itag + " to your AppleTV")
-	        videoUrlObj = urlData[0];
-	      } else if (quality == "worst") return urlData[urlData.length - 1];
-	      else videoUrlObj = urlData_closest_quality(quality);
-	    } else videoUrlObj = urlData;
-	  } else {
-	    console.log("Don\'t understand video info.");
-	    videoUrlObj = null;
-	  }
-	  if (videoUrlObj && videoUrlObj.url && /requiressl=yes/.test(videoUrlObj.url)) {
-	    videoUrlObj.url = videoUrlObj.url.replace(/^http:/, "https:");
-	  }
-	  return videoUrlObj;
+	    */
+	  urlData = [];
+	  return replaceHttpsIfNeeded(videoUrlObj);
 	}
-	function getAirPlayUrl(url) {
+	function getAirPlayUrl(url, ytPlayer) {
 	  const videoId = getIdFromUrl(url);
-	  const videoInfo = getVideoInfo(videoId, new XMLHttpRequest());
-	  const videoUrlObj = getVideoUrlObject(videoInfo, "best");
-	
-	  let airplayUrl = videoUrlObj.url;
-	  return airplayUrl;
+	  const videoInfos = [];
+	  videoInfos.push(getVideoInfo(videoId, new XMLHttpRequest()));
+	  const videoUrlObj = getVideoUrlObject(videoInfos, "best", ytPlayer);
+	  return videoUrlObj.url;
 	}
 	
 	module.exports = {

@@ -6,6 +6,30 @@ const storage = {
   position: localStorage["play-position"] || "current",
 };
 
+// let's make it think we're on Safari so can support pretty much all YouTube videos
+// including VEVO
+// because ytplayer is getting additional hlsvp property on Safari
+chrome.webRequest.onBeforeSendHeaders.addListener(
+    function(info) {
+        // Replace the User-Agent header
+        var headers = info.requestHeaders;
+        headers.forEach(function(header, i) {
+            if (header.name.toLowerCase() == 'user-agent') {
+                header.value = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/601.4.4 (KHTML, like Gecko) Version/9.0.3 Safari/601.4.4';
+            }
+        });
+        return {requestHeaders: headers};
+    },
+    // Request filter
+    {
+        // Modify the headers for these pages
+        urls: [
+            "https://www.youtube.com/*"
+        ],
+    },
+    ["blocking", "requestHeaders"]
+);
+
 chrome.contextMenus.removeAll();
 chrome.contextMenus.create({
   type: "normal",
@@ -86,6 +110,12 @@ function airplay(url, position) {
     + `\nStart-Position: ${position}\n`);
 }
 
+function startPlayingYouTube(videoUrl, position, ytPlayer) {
+  airplayUrl = youtube.getAirPlayUrl(videoUrl, ytPlayer);
+  console.log("airplayUrl: " + airplayUrl);
+  airplay(airplayUrl, position);
+  }
+
 /**
  * Starts playing video from given position
  *
@@ -123,11 +153,15 @@ chrome.pageAction.onClicked.addListener(function (tab) {
   }, function (response) {
     console.log('Response on HTML5 compatibility received');
     video = response.Html5Video;
-    if (typeof video === 'undefined' || /^http(s?):\/\/(www\.)?youtube/.test(tab.url)) {
-      console.log('startPlaying YouTube');
-      startPlaying(tab.url) // YouTube url
+    if (/^http(s?):\/\/(www\.)?youtube/.test(tab.url) || typeof video === 'undefined') {
+      console.log('Recognized page as YouTube video');
+      chrome.tabs.sendMessage(tab.id, {
+        action: "getYtPlayer"
+      }, function (response_yt_player) {
+        startPlayingYouTube(tab.url, "0", response_yt_player); // YouTube url and player object
+      });
     } else {
-      console.log('startPlaying HTML5', video);
+      console.log('Recognized page as containing HTML5 video', video);
       return startPlaying(video.url, 'video', video.position); // HTML5 video
     }
   });

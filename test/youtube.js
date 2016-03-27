@@ -92,7 +92,14 @@ describe("youtube", function () {
     expect(videoInfo).to.not.be.null;
     expect(videoInfo.token).to.not.be.null;
   });
-  const videoUrlObject = youtube.getVideoUrlObject(_videoInfo, "best");
+
+  const videoInfos = [];
+  const elTypes = ['&el=info', '&el=embedded', '&el=detailpage', '&el=vevo', ''];
+  
+  for (const i in elTypes) {
+    videoInfos.push(youtube.getVideoInfo(_videoId, new XMLHttpRequest(), elTypes[i]));
+  }
+  const videoUrlObject = youtube.getVideoUrlObject(videoInfos, "best");
   it("should pass when a valid videoUrlObject is returned", function () {
     // console.log("videoUrlObject: %j", videoUrlObject);
     expect(videoUrlObject).to.not.be.null;

@@ -4,7 +4,7 @@ window.addEventListener ("DOMActivate", tryToEnableChromePlay, false);
 /**
  * Tries to find video src in given document.
  * Uses window.document by default.
- * 
+ *
  * @param  {Object} [document] document to search in
  * @return {Object}            object with video url and position
  */
@@ -13,6 +13,11 @@ function checkForHtml5Video(document) {
 
 	// Fallback to the window.document if no document is given
 	document = document || window.document;
+
+	if (document.URL.indexOf("debugChromePlay.html") > -1) {
+		ret.url = document.getElementById("debugChromePlayUrl").value;
+		return ret;
+	}
 
 	var videos = document.getElementsByTagName('video');
 	for (var i=0; i<videos.length; i++) {
@@ -54,6 +59,16 @@ chrome.runtime.onMessage.addListener(
 		return true;
 	}
   });
+
+	// Listen for messages
+	chrome.runtime.onMessage.addListener(
+		function (request, sender, sendResponse) {
+	    if (request.action === 'getYtPlayer') {
+				const ytplayer_config_re = /<script>.+?ytplayer.config.+?=.+?(\{.+?\});.+?;<\/script>/
+				let ytplayer_config_matches = ytplayer_config_re.exec(document.all[0].outerHTML);
+				sendResponse(JSON.parse(ytplayer_config_matches[1]));
+	    }
+	});
 
 function tryToEnableChromePlay(evt) {
 
