@@ -4,7 +4,7 @@ window.addEventListener ("DOMActivate", tryToEnableChromePlay, false);
 /**
  * Tries to find video src in given document.
  * Uses window.document by default.
- * 
+ *
  * @param  {Object} [document] document to search in
  * @return {Object}            object with video url and position
  */
@@ -27,8 +27,11 @@ function checkForHtml5Video(document) {
 		// Search within same origin iframes because we can't access other domains
 		if (iframes[i].src.indexOf(window.document.domain) !== -1) {
 			// Recursive search within iframe if it contains any video
-			ret = checkForHtml5Video(iframes[i].contentDocument);
-			if (ret.url) return ret;
+			iframeDocument = iframes[i].contentDocument;
+			if (iframeDocument) {
+				ret = checkForHtml5Video(iframeDocument);
+				if (ret.url) return ret;
+			}
 		}
 	}
 
