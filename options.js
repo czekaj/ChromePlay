@@ -1,9 +1,20 @@
 // Saves options to localStorage.
 function saveOptions(event) {
   event.preventDefault();
+  
+  function adjustHostname(hostname) {
+    var adjustedHostname = hostname.replace(/\s+/g, '-');
+    if (!adjustedHostname.endsWith(".local")) {
+      adjustedHostname += ".local";
+    }
+    return adjustedHostname;
+  }
 
-  localStorage["hostname"] = document.getElementById("hostname").value;
+  var adjustedHostname = adjustHostname(document.getElementById("hostname").value);
+  localStorage["hostname"] = adjustedHostname;
   localStorage["play-position"] = document.getElementById("play-position-current").checked ? "current" : "0";
+
+  document.getElementById("hostname").value = localStorage["hostname"];
 
   chrome.extension.getBackgroundPage().window.location.reload();
 
